@@ -4,7 +4,7 @@ local util = {}
 
 util.__index = util
 local utilSingleton = setmetatable({}, util)
-utilSingleton.SOURCE_URL = "https://raw.githubusercontent.com/ahai-code/sdk-sources/main/bun.json"
+utilSingleton.SOURCE_URL = "https://api.github.com/repos/oven-sh/bun/releases"
 utilSingleton.RELEASES ={}
 
 function util:compare_versions(v1o, v2o)
@@ -34,6 +34,15 @@ function util:compare_versions(v1o, v2o)
 end
 
 function util:getInfo()
+    local platform = string.lower(RUNTIME.osType .. "-" .. RUNTIME.archType)
+    local platform_map = {
+        ["windows-amd64"] = "bun-windows-x64.zip",
+        ["linux-amd64"] = "bun-linux-x64.zip",
+        ["linux-arm64"] = "bun-linux-aarch64.zip",
+        ["darwin-amd64"] = "bun-darwin-x64.zip",
+        ["darwin-arm64"] = "bun-darwin-aarch64.zip"
+    }
+    local target = platform_map[platform] or ""
     local result = {}
     local resp, err = http.get({
         url = utilSingleton.SOURCE_URL
@@ -44,19 +53,22 @@ function util:getInfo()
     if resp.status_code ~= 200 then
         error("Failed to get information: status_code =>" .. resp.status_code)
     end
-    local respInfo = json.decode(resp.body)[RUNTIME.osType]
-    for version, array in pairs(respInfo) do
+    local releases = json.decode(resp.body)
+    for _, release in ipairs(releases) do
+        local version = release.tag_name:gsub("bun%-v", ""):gsub("^v", "")
+        local assets = release.assets
         local url = ""
-        for _, obj in ipairs(array) do
-            if obj.Arch=="" then
-                url = obj.Url
-            elseif obj.Arch == RUNTIME.archType then
-                url = obj.Url
+        for _, asset in ipairs(assets) do
+            if asset.name == target then
+                url = asset.browser_download_url
+                break
             end
         end
 
-        table.insert(result, {version = version,note=""})
-        table.insert(utilSingleton.RELEASES,{version = version,url=url})
+        if url ~= "" then
+            table.insert(result, {version = version, note = "" or ""})
+            table.insert(utilSingleton.RELEASES, {version = version, url = url})
+        end
     end
     table.sort(result, function(a, b)
         return util:compare_versions(a,b)
