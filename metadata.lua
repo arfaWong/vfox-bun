@@ -5,9 +5,9 @@ PLUGIN = {}
 --- Plugin name
 PLUGIN.name = "bun"
 --- Plugin version
-PLUGIN.version = "0.1.2"
+PLUGIN.version = "0.1.3"
 --- Plugin homepage
-PLUGIN.homepage = "https://github.com/ahai-code/vfox-bun"
+PLUGIN.homepage = "https://github.com/arfaWong/vfox-bun"
 --- Plugin license, please choose a correct license according to your needs.
 PLUGIN.license = "Apache 2.0"
 --- Plugin description
@@ -33,6 +33,6 @@ NOTE:
     you can set this address to the manifest file address, so that the plugin can be updated automatically.
 
  --]]
-PLUGIN.manifestUrl = "https://github.com/ahai-code/vfox-bun/releases/download/manifest/manifest.json"
+PLUGIN.manifestUrl = "https://github.com/arfaWong/vfox-bun/releases/download/manifest/manifest.json"
 -- Some things that need user to be attention!
 PLUGIN.notes = {}
