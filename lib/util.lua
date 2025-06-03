@@ -33,6 +33,17 @@ function util:compare_versions(v1o, v2o)
     return false
 end
 
+-- 解析 GitHub API 响应中的 Link 头部，提取下一页 URL
+function util:parseLinkHeader(linkHeader)
+    if not linkHeader then
+        return nil
+    end
+
+    -- 匹配 rel="next" 的链接
+    local nextUrl = linkHeader:match('<([^>]+)>%s*;%s*rel="next"')
+    return nextUrl
+end
+
 function util:getInfo()
     local platform = string.lower(RUNTIME.osType .. "-" .. RUNTIME.archType)
     local platform_map = {
@@ -44,17 +55,34 @@ function util:getInfo()
     }
     local target = platform_map[platform] or ""
     local result = {}
-    local resp, err = http.get({
-        url = utilSingleton.SOURCE_URL
-    })
-    if err ~= nil then
-        error("Failed to get information: " .. err)
+    local allReleases = {}
+
+    -- 获取所有分页的 releases 数据
+    local currentUrl = utilSingleton.SOURCE_URL
+    while currentUrl do
+        local resp, err = http.get({
+            url = currentUrl
+        })
+        if err ~= nil then
+            error("Failed to get information: " .. err)
+        end
+        if resp.status_code ~= 200 then
+            error("Failed to get information: status_code =>" .. resp.status_code)
+        end
+
+        local releases = json.decode(resp.body)
+        -- 将当前页的 releases 添加到总列表中
+        for _, release in ipairs(releases) do
+            table.insert(allReleases, release)
+        end
+
+        -- 检查是否有下一页
+        local linkHeader = resp.headers["Link"] or resp.headers["link"]
+        currentUrl = util:parseLinkHeader(linkHeader)
     end
-    if resp.status_code ~= 200 then
-        error("Failed to get information: status_code =>" .. resp.status_code)
-    end
-    local releases = json.decode(resp.body)
-    for _, release in ipairs(releases) do
+
+    -- 处理所有获取到的 releases
+    for _, release in ipairs(allReleases) do
         local version = release.tag_name:gsub("bun%-v", ""):gsub("^v", "")
         local assets = release.assets
         local url = ""
