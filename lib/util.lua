@@ -46,11 +46,31 @@ end
 
 function util:getInfo()
     local platform = string.lower(RUNTIME.osType .. "-" .. RUNTIME.archType)
+
+    -- 检测 CPU 是否支持 AVX2 指令集，如果不支持则添加 -baseline 后缀
+    if platform == "darwin-amd64" then
+        local handle = io.popen("sysctl -a | grep machdep.cpu | grep AVX2")
+        local result = handle:read("*a")
+        handle:close()
+        if result == "" then
+            platform = platform .. "-baseline"
+        end
+    elseif platform == "linux-amd64" then
+        local handle = io.popen("cat /proc/cpuinfo | grep avx2")
+        local result = handle:read("*a")
+        handle:close()
+        if result == "" then
+            platform = platform .. "-baseline"
+        end
+    end
+
     local platform_map = {
         ["windows-amd64"] = "bun-windows-x64.zip",
         ["linux-amd64"] = "bun-linux-x64.zip",
+        ["linux-amd64-baseline"] = "bun-linux-x64-baseline.zip",
         ["linux-arm64"] = "bun-linux-aarch64.zip",
         ["darwin-amd64"] = "bun-darwin-x64.zip",
+        ["darwin-amd64-baseline"] = "bun-darwin-x64-baseline.zip",
         ["darwin-arm64"] = "bun-darwin-aarch64.zip"
     }
     local target = platform_map[platform] or ""
