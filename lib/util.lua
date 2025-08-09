@@ -92,7 +92,9 @@ function util:getInfo()
                 local minutes = math.floor(wait_seconds / 60)
                 local seconds = math.floor(wait_seconds % 60)
                 local tips = (minutes > 0) and (minutes .. " minutes") or (seconds .. " seconds")
-                error("Failed to get information.\nGithub API rate limit exceeded. Please try again in " .. tips)
+                local msg = json.decode(resp.body)
+                print("📢 [Github] " .. msg.message .. " " .. msg.documentation_url)
+                print("📢 Please try again in " .. tips)
             end
             error("Failed to get information: status_code =>" .. resp.status_code)
         end
