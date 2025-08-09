@@ -87,6 +87,13 @@ function util:getInfo()
             error("Failed to get information: " .. err)
         end
         if resp.status_code ~= 200 then
+            if resp.headers["X-Ratelimit-Reset"] and resp.headers["X-Ratelimit-Remaining"] == "0" then
+                local wait_seconds = resp.headers["X-Ratelimit-Reset"] - os.time()
+                local minutes = math.floor(wait_seconds / 60)
+                local seconds = math.floor(wait_seconds % 60)
+                local tips = (minutes > 0) and (minutes .. " minutes") or (seconds .. " seconds")
+                error("Failed to get information.\nGithub API rate limit exceeded. Please try again in " .. tips)
+            end
             error("Failed to get information: status_code =>" .. resp.status_code)
         end
 
