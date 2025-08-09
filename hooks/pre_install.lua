@@ -20,5 +20,23 @@ function PLUGIN:PreInstall(ctx)
             return release
         end
     end
+
+    -- Match `major` OR `major.minor`
+    local ctx_version_parts = util:split_versions(ctx.version)
+    for _, release in ipairs(releases) do
+        local release_version_parts = util:split_versions(release.version)
+        if #ctx_version_parts == 1 then
+            -- major
+            if ctx_version_parts[1] == release_version_parts[1] then
+                return release
+            end
+        elseif #ctx_version_parts == 2 then
+            -- major.minor
+            if ctx_version_parts[1] == release_version_parts[1] and ctx_version_parts[2] == release_version_parts[2] then
+                return release
+            end
+        end
+    end
+
     return {}
 end
