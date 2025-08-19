@@ -7,6 +7,14 @@ local utilSingleton = setmetatable({}, util)
 utilSingleton.SOURCE_URL = "https://api.github.com/repos/oven-sh/bun/releases"
 utilSingleton.RELEASES ={}
 
+function util:split_versions(version)
+    local parts = {}
+    for part in string.gmatch(version, "[^.]+") do
+        table.insert(parts, tonumber(part))
+    end
+    return parts
+end
+
 function util:compare_versions(v1o, v2o)
     local v1 = v1o.version
     local v2 = v2o.version
